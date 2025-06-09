@@ -1,1 +1,1 @@
-Small list tracker app build using Flutter.
+Small list tracker app built using Flutter.
