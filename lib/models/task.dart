@@ -23,6 +23,9 @@ class Task extends HiveObject {
   @HiveField(5)
   DateTime? dueDate;
 
+  @HiveField(6)
+  String listId;
+
   Task({
     String? id,
     required this.title,
@@ -30,6 +33,7 @@ class Task extends HiveObject {
     this.isCompleted = false,
     DateTime? createdAt,
     this.dueDate,
+    required this.listId,
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now();
 
@@ -50,6 +54,3 @@ class Task extends HiveObject {
   }
 }
 
-// Note: After creating this file, run the following command in terminal:
-// flutter pub run build_runner build
-// This will generate the task.g.dart file with the HiveAdapter

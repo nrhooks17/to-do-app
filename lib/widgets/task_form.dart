@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:todo_app/models/task.dart';
+import 'package:todo_app/providers/list_provider.dart';
+import 'package:todo_app/providers/language_provider.dart';
 import 'package:todo_app/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -67,12 +70,29 @@ class _TaskFormState extends State<TaskForm> {
   
   void _saveForm() {
     if (_formKey.currentState!.validate()) {
+      final listProvider = Provider.of<ListProvider>(context, listen: false);
+      final currentList = listProvider.currentList;
+      
+      if (currentList == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('pleaseSelectListFirst'));
+              },
+            ),
+          ),
+        );
+        return;
+      }
+      
       final task = widget.task != null
           ? widget.task!
           : Task(
               title: _titleController.text,
               description: _descriptionController.text,
               dueDate: _dueDate,
+              listId: currentList.id,
             );
       
       if (widget.task != null) {
@@ -106,36 +126,46 @@ class _TaskFormState extends State<TaskForm> {
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  prefixIcon: Icon(Icons.title),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
+              Consumer<LanguageProvider>(
+                builder: (context, languageProvider, child) {
+                  return TextFormField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      labelText: languageProvider.translate('title'),
+                      prefixIcon: const Icon(Icons.title),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return languageProvider.translate('pleaseEnterTitle');
+                      }
+                      return null;
+                    },
+                  );
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  prefixIcon: Icon(Icons.description),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 5,
+              Consumer<LanguageProvider>(
+                builder: (context, languageProvider, child) {
+                  return TextFormField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: languageProvider.translate('description'),
+                      prefixIcon: const Icon(Icons.description),
+                      alignLabelWithHint: true,
+                    ),
+                    maxLines: 5,
+                  );
+                },
               ),
               const SizedBox(height: 16),
-              ListTile(
-                title: const Text('Due Date'),
-                subtitle: Text(
-                  _dueDate != null
-                      ? DateFormat('EEEE, MMM dd, yyyy').format(_dueDate!)
-                      : 'No due date set',
+              Consumer<LanguageProvider>(
+                builder: (context, languageProvider, child) {
+                  return ListTile(
+                    title: Text(languageProvider.translate('dueDate')),
+                    subtitle: Text(
+                      _dueDate != null
+                        ? DateFormat('EEEE, MMM dd, yyyy').format(_dueDate!)
+                        : languageProvider.translate('noDueDateSet'),
                 ),
                 leading: const Icon(Icons.calendar_today),
                 trailing: _dueDate != null
@@ -148,16 +178,23 @@ class _TaskFormState extends State<TaskForm> {
                         },
                       )
                     : null,
-                onTap: () => _selectDate(context),
+                    onTap: () => _selectDate(context),
+                  );
+                },
               ),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: "save_task_fab",
         onPressed: _saveForm,
         icon: const Icon(Icons.save),
-        label: const Text('Save'),
+        label: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            return Text(languageProvider.translate('save'));
+          },
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

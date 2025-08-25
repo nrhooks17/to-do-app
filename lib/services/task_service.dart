@@ -20,6 +20,21 @@ class TaskService {
     final box = await _box;
     return box.values.where((task) => !task.isCompleted).toList();
   }
+
+  Future<List<Task>> getTasksForList(String listId) async {
+    final box = await _box;
+    return box.values.where((task) => task.listId == listId).toList();
+  }
+
+  Future<List<Task>> getActiveTasksForList(String listId) async {
+    final box = await _box;
+    return box.values.where((task) => task.listId == listId && !task.isCompleted).toList();
+  }
+
+  Future<List<Task>> getCompletedTasksForList(String listId) async {
+    final box = await _box;
+    return box.values.where((task) => task.listId == listId && task.isCompleted).toList();
+  }
   
   Future<void> addTask(Task task) async {
     final box = await _box;

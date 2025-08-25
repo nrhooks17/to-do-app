@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app/models/task.dart';
 import 'package:todo_app/providers/task_provider.dart';
+import 'package:todo_app/providers/list_provider.dart';
+import 'package:todo_app/providers/language_provider.dart';
 import 'package:todo_app/screens/add_task_screen.dart';
 import 'package:todo_app/widgets/task_item.dart';
+import 'package:todo_app/widgets/list_dropdown.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,13 +17,63 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final listProvider = Provider.of<ListProvider>(context, listen: false);
+      listProvider.ensureDefaultList().then((_) {
+        if (listProvider.currentList != null) {
+          final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+          taskProvider.setCurrentListId(listProvider.currentList!.id);
+        }
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Todo App'),
+            title: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('appTitle'));
+              },
+            ),
             actions: [
+              Consumer<LanguageProvider>(
+                builder: (context, languageProvider, child) {
+                  return PopupMenuButton<String>(
+                    icon: const Icon(Icons.language),
+                    onSelected: (value) {
+                      languageProvider.setLanguage(value);
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'en',
+                        child: Row(
+                          children: [
+                            if (languageProvider.isEnglish) const Icon(Icons.check),
+                            const SizedBox(width: 8),
+                            Text(languageProvider.translate('english')),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'zh',
+                        child: Row(
+                          children: [
+                            if (languageProvider.isChinese) const Icon(Icons.check),
+                            const SizedBox(width: 8),
+                            Text(languageProvider.translate('chinese')),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'delete_completed') {
@@ -30,13 +83,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete_completed',
-                    child: Text('Delete Completed Tasks'),
+                    child: Consumer<LanguageProvider>(
+                      builder: (context, languageProvider, child) {
+                        return Text(languageProvider.translate('deleteCompletedTasks'));
+                      },
+                    ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete_all',
-                    child: Text('Delete All Tasks'),
+                    child: Consumer<LanguageProvider>(
+                      builder: (context, languageProvider, child) {
+                        return Text(languageProvider.translate('deleteAllTasks'));
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -44,6 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           body: Column(
             children: [
+              // List selector
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: const ListDropdown(),
+              ),
+              
               // Filter options
               _buildFilterOptions(context),
               
@@ -60,6 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 left: 30,
                 bottom: 16,
                 child: FloatingActionButton(
+                  heroTag: "ai_fab",
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -79,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 16,
                 bottom: 16,
                 child: FloatingActionButton(
+                  heroTag: "add_task_fab",
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -123,26 +192,38 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildFilterButton(
-            context,
-            'All',
-            TaskFilter.all,
-            taskProvider.currentFilter,
-            () => taskProvider.setFilter(TaskFilter.all),
+          Consumer<LanguageProvider>(
+            builder: (context, languageProvider, child) {
+              return _buildFilterButton(
+                context,
+                languageProvider.translate('all'),
+                TaskFilter.all,
+                taskProvider.currentFilter,
+                () => taskProvider.setFilter(TaskFilter.all),
+              );
+            },
           ),
-          _buildFilterButton(
-            context,
-            'Active',
-            TaskFilter.active,
-            taskProvider.currentFilter,
-            () => taskProvider.setFilter(TaskFilter.active),
+          Consumer<LanguageProvider>(
+            builder: (context, languageProvider, child) {
+              return _buildFilterButton(
+                context,
+                languageProvider.translate('active'),
+                TaskFilter.active,
+                taskProvider.currentFilter,
+                () => taskProvider.setFilter(TaskFilter.active),
+              );
+            },
           ),
-          _buildFilterButton(
-            context,
-            'Completed',
-            TaskFilter.completed,
-            taskProvider.currentFilter,
-            () => taskProvider.setFilter(TaskFilter.completed),
+          Consumer<LanguageProvider>(
+            builder: (context, languageProvider, child) {
+              return _buildFilterButton(
+                context,
+                languageProvider.translate('completed'),
+                TaskFilter.completed,
+                taskProvider.currentFilter,
+                () => taskProvider.setFilter(TaskFilter.completed),
+              );
+            },
           ),
         ],
       ),
@@ -212,7 +293,11 @@ class _HomeScreenState extends State<HomeScreen> {
             if (taskProvider.currentFilter != TaskFilter.all)
               ElevatedButton(
                 onPressed: () => taskProvider.setFilter(TaskFilter.all),
-                child: const Text('Show All Tasks'),
+                child: Consumer<LanguageProvider>(
+                  builder: (context, languageProvider, child) {
+                    return Text(languageProvider.translate('showAllTasks'));
+                  },
+                ),
               ),
           ],
         ),
@@ -235,9 +320,13 @@ class _HomeScreenState extends State<HomeScreen> {
               taskProvider.deleteTask(task.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Task deleted'),
+                  content: Consumer<LanguageProvider>(
+                    builder: (context, languageProvider, child) {
+                      return Text(languageProvider.translate('taskDeleted'));
+                    },
+                  ),
                   action: SnackBarAction(
-                    label: 'Undo',
+                    label: context.read<LanguageProvider>().translate('undo'),
                     onPressed: () {
                       taskProvider.addTask(task);
                     },
@@ -279,19 +368,35 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Completed Tasks'),
-        content: const Text('Are you sure you want to delete all completed tasks?'),
+        title: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            return Text(languageProvider.translate('deleteCompletedTasks'));
+          },
+        ),
+        content: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            return Text(languageProvider.translate('confirmDeleteCompleted'));
+          },
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('cancel'));
+              },
+            ),
           ),
           TextButton(
             onPressed: () {
               context.read<TaskProvider>().deleteCompletedTasks();
               Navigator.pop(context);
             },
-            child: const Text('Delete'),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('delete'));
+              },
+            ),
           ),
         ],
       ),
@@ -302,19 +407,35 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete All Tasks'),
-        content: const Text('Are you sure you want to delete all tasks?'),
+        title: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            return Text(languageProvider.translate('deleteAllTasks'));
+          },
+        ),
+        content: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            return Text(languageProvider.translate('confirmDeleteAll'));
+          },
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('cancel'));
+              },
+            ),
           ),
           TextButton(
             onPressed: () {
               context.read<TaskProvider>().deleteAllTasks();
               Navigator.pop(context);
             },
-            child: const Text('Delete'),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('delete'));
+              },
+            ),
           ),
         ],
       ),

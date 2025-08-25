@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_app/models/task.dart';
+import 'package:todo_app/providers/language_provider.dart';
 import 'package:todo_app/screens/task_details_screen.dart';
 import 'package:todo_app/theme/app_theme.dart';
 
@@ -23,97 +25,101 @@ class TaskItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     
-    return Slidable(
-      endActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (_) => onEdit(),
-            backgroundColor: AppTheme.secondaryColor,
-            foregroundColor: Colors.white,
-            icon: Icons.edit,
-            label: 'Edit',
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              bottomLeft: Radius.circular(12),
-            ),
-          ),
-          SlidableAction(
-            onPressed: (_) => onDelete(),
-            backgroundColor: AppTheme.errorColor,
-            foregroundColor: Colors.white,
-            icon: Icons.delete,
-            label: 'Delete',
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-          ),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskDetailsScreen(task: task),
-            ),
-          );
-        },
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                // Checkbox
-                Checkbox(
-                  value: task.isCompleted,
-                  onChanged: onCheckboxChanged,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return Slidable(
+          endActionPane: ActionPane(
+            motion: const ScrollMotion(),
+            children: [
+              SlidableAction(
+                onPressed: (_) => onEdit(),
+                backgroundColor: AppTheme.secondaryColor,
+                foregroundColor: Colors.white,
+                icon: Icons.edit,
+                label: languageProvider.translate('edit'),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                // Task title and due date
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        task.title,
-                        style: textTheme.titleMedium?.copyWith(
-                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                          color: task.isCompleted ? Colors.grey : null,
-                          fontWeight: FontWeight.w600,
-                        ),
+              ),
+              SlidableAction(
+                onPressed: (_) => onDelete(),
+                backgroundColor: AppTheme.errorColor,
+                foregroundColor: Colors.white,
+                icon: Icons.delete,
+                label: languageProvider.translate('delete'),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+              ),
+            ],
+          ),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TaskDetailsScreen(task: task),
+                ),
+              );
+            },
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    // Checkbox
+                    Checkbox(
+                      value: task.isCompleted,
+                      onChanged: onCheckboxChanged,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      if (task.dueDate != null) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.calendar_today,
-                              size: 14,
-                              color: Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    // Task title and due date
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.title,
+                            style: textTheme.titleMedium?.copyWith(
+                              decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                              color: task.isCompleted ? Colors.grey : null,
+                              fontWeight: FontWeight.w600,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              DateFormat('MMM dd, yyyy').format(task.dueDate!),
-                              style: textTheme.bodySmall?.copyWith(
-                                color: _getDueDateColor(task.dueDate!),
-                              ),
+                          ),
+                          if (task.dueDate != null) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  size: 14,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat('MMM dd, yyyy').format(task.dueDate!),
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: _getDueDateColor(task.dueDate!),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
-                        ),
-                      ],
-                    ],
-                  ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

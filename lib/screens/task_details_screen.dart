@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app/models/task.dart';
 import 'package:todo_app/providers/task_provider.dart';
+import 'package:todo_app/providers/language_provider.dart';
 import 'package:todo_app/screens/add_task_screen.dart';
 import 'package:todo_app/theme/app_theme.dart';
 
@@ -16,17 +17,19 @@ class TaskDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddTaskScreen(
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(languageProvider.translate('taskDetails')),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddTaskScreen(
                     task: task,
                     onTaskAdded: (updatedTask) {
                       // Get the provider from the closest Provider ancestor
@@ -41,42 +44,44 @@ class TaskDetailsScreen extends StatelessWidget {
                 ),
               );
             },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () {
+                  _showDeleteConfirmationDialog(context, languageProvider);
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              _showDeleteConfirmationDialog(context);
-            },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Task status and created date
-            Row(
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: task.isCompleted
-                        ? AppTheme.successColor
-                        : AppTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    task.isCompleted ? 'Completed' : 'Active',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                // Task status and created date
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: task.isCompleted
+                            ? AppTheme.successColor
+                            : AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        task.isCompleted 
+                          ? languageProvider.translate('completed') 
+                          : languageProvider.translate('active'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
                 const Spacer(),
                 Text(
                   'Created: ${DateFormat('MMM dd, yyyy').format(task.createdAt)}',
@@ -88,7 +93,7 @@ class TaskDetailsScreen extends StatelessWidget {
             
             // Task title
             Text(
-              'Title',
+              languageProvider.translate('title'),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: Colors.grey,
                   ),
@@ -105,7 +110,7 @@ class TaskDetailsScreen extends StatelessWidget {
             // Due date, if any
             if (task.dueDate != null) ...[
               Text(
-                'Due Date',
+                languageProvider.translate('dueDate'),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: Colors.grey,
                     ),
@@ -132,7 +137,7 @@ class TaskDetailsScreen extends StatelessWidget {
             // Description, if any
             if (task.description.isNotEmpty) ...[
               Text(
-                'Description',
+                languageProvider.translate('description'),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       color: Colors.grey,
                     ),
@@ -177,8 +182,8 @@ class TaskDetailsScreen extends StatelessWidget {
                 ),
                 child: Text(
                   task.isCompleted
-                      ? 'Mark as Incomplete'
-                      : 'Mark as Complete',
+                      ? languageProvider.translate('markAsIncomplete')
+                      : languageProvider.translate('markAsComplete'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -186,10 +191,12 @@ class TaskDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -207,16 +214,20 @@ class TaskDetailsScreen extends StatelessWidget {
     }
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context) {
+  void _showDeleteConfirmationDialog(BuildContext context, LanguageProvider languageProvider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Task'),
-        content: Text('Are you sure you want to delete "${task.title}"?'),
+        title: Text(languageProvider.translate('deleteTask')),
+        content: Text(languageProvider.translate('confirmDeleteTask', placeholders: {'title': task.title})),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('cancel'));
+              },
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -228,7 +239,11 @@ class TaskDetailsScreen extends StatelessWidget {
               Navigator.pop(context); // Close the dialog
               Navigator.pop(context); // Go back to the list screen
             },
-            child: const Text('Delete'),
+            child: Consumer<LanguageProvider>(
+              builder: (context, languageProvider, child) {
+                return Text(languageProvider.translate('delete'));
+              },
+            ),
           ),
         ],
       ),
