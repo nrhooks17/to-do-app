@@ -3,7 +3,7 @@ import 'package:todo_app/models/list.dart';
 import 'package:todo_app/services/list_service.dart';
 
 class ListProvider extends ChangeNotifier {
-  final ListService _listService = ListService();
+  final ListService _listService;
   List<TaskList> _lists = [];
   TaskList? _currentList;
   bool _isLoading = false;
@@ -12,7 +12,7 @@ class ListProvider extends ChangeNotifier {
   TaskList? get currentList => _currentList;
   bool get isLoading => _isLoading;
 
-  ListProvider() {
+  ListProvider({required ListService listService}) : _listService = listService {
     _loadLists();
   }
 

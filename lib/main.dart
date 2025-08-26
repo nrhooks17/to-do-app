@@ -5,6 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:todo_app/providers/task_provider.dart';
 import 'package:todo_app/providers/list_provider.dart';
 import 'package:todo_app/providers/language_provider.dart';
+import 'package:todo_app/services/task_service.dart';
+import 'package:todo_app/services/list_service.dart';
 import 'package:todo_app/models/task.dart';
 import 'package:todo_app/models/list.dart';
 import 'package:todo_app/screens/home_screen.dart';
@@ -34,8 +36,8 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => TaskProvider()),
-        ChangeNotifierProvider(create: (context) => ListProvider()),
+        ChangeNotifierProvider(create: (context) => TaskProvider(taskService: TaskService())),
+        ChangeNotifierProvider(create: (context) => ListProvider(listService: ListService())),
         ChangeNotifierProvider(create: (context) => LanguageProvider()),
       ],
       child: const MyApp(),

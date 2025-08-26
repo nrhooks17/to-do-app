@@ -9,7 +9,7 @@ enum TaskFilter {
 }
 
 class TaskProvider extends ChangeNotifier {
-  final TaskService _taskService = TaskService();
+  final TaskService _taskService;
   List<Task> _tasks = [];
   TaskFilter _currentFilter = TaskFilter.all;
   bool _isLoading = false;
@@ -20,7 +20,7 @@ class TaskProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get currentListId => _currentListId;
 
-  TaskProvider() {
+  TaskProvider({required TaskService taskService}) : _taskService = taskService {
     // Don't load tasks immediately - wait for list to be selected
   }
 
@@ -119,4 +119,5 @@ class TaskProvider extends ChangeNotifier {
     _currentListId = listId;
     _loadTasks();
   }
+
 }
