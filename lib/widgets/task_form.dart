@@ -110,9 +110,18 @@ class _TaskFormState extends State<TaskForm> {
   
   @override
   Widget build(BuildContext context) {
+    final listProvider = Provider.of<ListProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final currentList = listProvider.currentList;
+    
+    String displayTitle = widget.title;
+    if (widget.task == null && currentList != null) {
+      displayTitle = '${languageProvider.translate('addTask')} - ${currentList.name}';
+    }
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(displayTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
