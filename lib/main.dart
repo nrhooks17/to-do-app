@@ -23,13 +23,7 @@ void main() async {
   Hive.registerAdapter(TaskAdapter());
   Hive.registerAdapter(TaskListAdapter());
   
-  // Clear and open boxes (temporary fix for schema migration)
-  try {
-    await Hive.deleteBoxFromDisk('tasks');
-    await Hive.deleteBoxFromDisk('lists');
-  } catch (e) {
-    // Ignore if boxes don't exist
-  }
+  // Open boxes for persistent storage
   await Hive.openBox<Task>('tasks');
   await Hive.openBox<TaskList>('lists');
   
